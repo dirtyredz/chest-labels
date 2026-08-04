@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>ChestLabels.Tests</AssemblyName>
+    <RootNamespace>ChestLabels.Tests</RootNamespace>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Compile the store source directly rather than referencing the netstandard2.1 plugin.
+      The plugin assembly drags in Unity/BepInEx types that cannot load outside the game;
+      LabelStore is deliberately free of them so it can be tested on its own.
+    -->
+    <Compile Include="..\src\LabelStore.cs" Link="LabelStore.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(MoonlightPeaksManagedPath)\Newtonsoft.Json.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>
