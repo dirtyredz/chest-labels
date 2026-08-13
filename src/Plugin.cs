@@ -8,13 +8,30 @@ using UnityEngine;
 
 namespace ChestLabels
 {
+    /// <summary>
+    /// How a named chest's label is exposed to screen readers (e.g. MoonlightAccess) through
+    /// the game's own CustomName field. See <see cref="ChestPatches"/> for the read-only patch
+    /// that applies it - the save is never written.
+    /// </summary>
+    public enum ScreenReaderNameMode
+    {
+        /// <summary>Leave the game's name field untouched.</summary>
+        Off,
+
+        /// <summary>Return just the label, e.g. "Pantry".</summary>
+        LabelOnly,
+
+        /// <summary>Return the object's type and label, e.g. "Storage Crate named Pantry".</summary>
+        TypeAndLabel,
+    }
+
     [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
     [BepInProcess("Moonlight Peaks.exe")]
     public sealed class ChestLabelsPlugin : BaseUnityPlugin
     {
         public const string PluginGuid = "com.dirtyredz.moonlightpeaks.chestlabels";
         public const string PluginName = "Chest Labels";
-        public const string PluginVersion = "0.7.1";
+        public const string PluginVersion = "1.0.0";
 
         internal static ManualLogSource Log;
         internal static LabelStore Store;
@@ -31,6 +48,7 @@ namespace ChestLabels
         internal static ConfigEntry<bool> ShowEditButton;
         internal static ConfigEntry<bool> LogUiDiagnostics;
         internal static ConfigEntry<bool> ShowHoverLabel;
+        internal static ConfigEntry<ScreenReaderNameMode> ScreenReaderName;
         internal static ConfigEntry<bool> UseGameInteractionLabel;
         internal static ConfigEntry<bool> UseGameNameplate;
         internal static ConfigEntry<string> NameplateTint;
@@ -53,6 +71,7 @@ namespace ChestLabels
         private const string ChestWindow = "ModMenu.Section=Chest window";
         private const string HoverLabelSection = "ModMenu.Section=Hover label";
         private const string Renaming = "ModMenu.Section=Renaming";
+        private const string ScreenReaderSection = "ModMenu.Section=Screen reader";
         private const string Diagnostics = "ModMenu.Section=Diagnostics";
 
         private void Awake()
@@ -203,6 +222,18 @@ namespace ChestLabels
                     "all, letting the game's interaction chevron show through.",
                     new AcceptableValueRange<float>(0f, 1f),
                     HoverLabelSection, "ModMenu.Label=Background opacity"));
+
+            ScreenReaderName = Config.Bind(
+                "Accessibility", "ScreenReaderName", ScreenReaderNameMode.TypeAndLabel,
+                new ConfigDescription(
+                    "How a named chest's label is read out by screen readers such as " +
+                    "MoonlightAccess. It works by filling the game's own (normally empty) name " +
+                    "field for the chest, which the screen reader already reads. " +
+                    "\"Type and label\" says e.g. \"Storage Crate named Pantry\"; \"Label only\" " +
+                    "says just \"Pantry\"; \"Off\" leaves the field untouched. The label is only " +
+                    "supplied when read - it is never written into your save.",
+                    null,
+                    ScreenReaderSection, "ModMenu.Label=Screen reader name"));
 
             LogUiDiagnostics = Config.Bind(
                 "Diagnostics", "LogUiDiagnostics", false,

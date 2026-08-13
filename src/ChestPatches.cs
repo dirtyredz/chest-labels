@@ -207,6 +207,88 @@ namespace ChestLabels
             }
         }
 
+        /// <summary>Set once the CustomName patch throws, so it stands down for the session.</summary>
+        private static bool screenReaderNameDisabledAfterError;
+
+        /// <summary>
+        /// Expose a named chest's label through the game's own <c>CustomName</c> field so screen
+        /// readers - MoonlightAccess in particular - announce it. MoonlightAccess names a placed
+        /// object from <c>GridObjectPersistence.CustomName</c> and falls back to the asset name
+        /// ("Storage Crate") when it is empty, which is why an unnamed-to-the-game chest reads as
+        /// its type rather than the player's label.
+        ///
+        /// This is a read-time overlay only. It decorates the property's return value; it never
+        /// writes <c>ItemEntry.CustomName</c>, so:
+        ///   - the save is untouched (see research/02-save-format.md for why the field is left
+        ///     unwritten deliberately), and
+        ///   - item stacking/identity is unaffected, because the compare mask reads the raw
+        ///     struct field, not this property.
+        ///
+        /// A real game-set CustomName is never overridden - the label only fills the otherwise
+        /// dormant field. The sidecar key is the grid object's GUID, so a lookup hit is itself
+        /// proof the object is one of our labelled chests; no type check is needed.
+        /// </summary>
+        [HarmonyPatch(typeof(GridObjectPersistence), nameof(GridObjectPersistence.CustomName), MethodType.Getter)]
+        [HarmonyPostfix]
+        private static void GridObjectPersistence_CustomName(GridObjectPersistence __instance, ref string __result)
+        {
+            if (screenReaderNameDisabledAfterError)
+            {
+                return;
+            }
+
+            try
+            {
+                var mode = ChestLabelsPlugin.ScreenReaderName.Value;
+                if (mode == ScreenReaderNameMode.Off)
+                {
+                    return;
+                }
+
+                // Only ever fill the empty field; never clobber a name the game itself set.
+                if (!string.IsNullOrEmpty(__result) || __instance == null)
+                {
+                    return;
+                }
+
+                if (!ChestLabelsPlugin.EnsureStoreLoaded())
+                {
+                    return;
+                }
+
+                var guid = __instance.Guid.ToString();
+                if (string.IsNullOrWhiteSpace(guid))
+                {
+                    return;
+                }
+
+                // Store.Get normalizes the key itself, so the raw GUID string is fine here.
+                var label = ChestLabelsPlugin.Store?.Get(guid);
+                if (string.IsNullOrEmpty(label))
+                {
+                    return;
+                }
+
+                if (mode == ScreenReaderNameMode.TypeAndLabel)
+                {
+                    var itemAsset = __instance.ItemAsset;
+                    var type = itemAsset == null ? null : itemAsset.Name;
+                    __result = string.IsNullOrEmpty(type) ? label : $"{type} named {label}";
+                }
+                else
+                {
+                    __result = label;
+                }
+            }
+            catch (Exception e)
+            {
+                // A getter that throws would fire on every read; stand down for the session.
+                screenReaderNameDisabledAfterError = true;
+                ChestLabelsPlugin.Log.LogError(
+                    $"Screen-reader name patch failed; disabling it for this session. {e}");
+            }
+        }
+
         /// <summary>
         /// Chest destroyed. Prefix, because Chest.Delete nulls GridObjectPersistence and we
         /// need the GUID to prune the label before it goes.

@@ -6,6 +6,25 @@ during development are not releases and do not get an entry. See RELEASING.md.
 Plain ASCII punctuation throughout - em-dashes did not survive a PowerShell round-trip and
 came back double-encoded.
 
+## 1.0.0 - 2026-08-10
+
+**Screen reader support.** Named chests are now spoken by screen readers such as
+MoonlightAccess. Facing a chest in the world announced only its type ("Storage Crate"),
+because the reader takes the name from the game's own name field and the game leaves that
+field empty for chests. The mod now supplies the label through that field when it is read,
+so the reader speaks the name the player gave it.
+
+A new `ScreenReaderName` setting chooses the wording:
+
+- **Type and label** (default) - "Storage Crate named Pantry".
+- **Label only** - "Pantry".
+- **Off** - leaves the field untouched.
+
+Read-only, as ever: the label is supplied only at the moment the field is read and is never
+written into the save, so item stacking and identity - which compare the underlying stored
+value, not this field - are untouched. See research/02-save-format.md for why the field
+itself is deliberately left unwritten.
+
 ## 0.7.1 - 2026-08-03
 
 **Fixed: clicking the pencil changed the text's appearance.** The rename field resolved

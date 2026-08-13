@@ -1,5 +1,9 @@
 # Nexus Mod Page — Chest Labels
 
+> **Pasting into the upload form? Use [nexus-paste.md](nexus-paste.md), not this file.**
+> The copy here is wrapped for reading, and the editor turns every wrap into a `<br>`.
+> See [13-nexus-page-standard.md](../../13-nexus-page-standard.md).
+
 Draft copy for the Nexus listing. Nexus descriptions use **BBCode**, so a converted version
 follows the readable draft below.
 
@@ -12,9 +16,11 @@ follows the readable draft below.
 | **Name** | Chest Labels |
 | **Summary** (short, shows in listings) | Name your chests and see which is which — a title in the chest window and a label when you mouse over it. |
 | **Category** | User Interface |
-| **Version** | 0.6.0 |
-| **Requirements** | BepInEx 5 (win_x64) — required |
-| | Mod Menu — optional, for in-game settings |
+| **Version** | 1.0.0 |
+| **Nexus page** | [mod 119](https://www.nexusmods.com/moonlightpeaks/mods/119) — live since 2026-08-03 |
+| **Requirements** | BepInEx 5 (win_x64), 5.4.23.5 or newer — required |
+| | [Mod Nook](https://www.nexusmods.com/moonlightpeaks/mods/127) — optional, for in-game settings |
+| | Mod Menu — optional, the alternative to Mod Nook |
 | **Tags** | quality of life, user interface, storage, inventory, save-safe |
 | **Licence** | MIT |
 
@@ -64,10 +70,22 @@ Chest Labels and your save is exactly what the game wrote.
 
 ### Installation instructions
 
+**With Vortex**
+
+Open the Files tab, click the Vortex button, and enable the mod. Done.
+
+**Manually**
+
 1. Install BepInEx 5 (win_x64) into your Moonlight Peaks folder, if you do not have it
-   already. The BepInEx folder should sit beside Moonlight Peaks.exe.
-2. Extract this mod into the same folder. It will land in BepInEx/plugins/ChestLabels.
-3. Start the game.
+   already. The BepInEx folder sits beside Moonlight Peaks.exe.
+2. Launch the game once, then quit. This creates the BepInEx/plugins folder.
+3. Download the archive from the Files tab and extract it over your Moonlight Peaks folder,
+   so the file ends up at BepInEx/plugins/ChestLabels/ChestLabels.dll.
+4. Launch the game.
+
+Settings are written to a .cfg in BepInEx/config on first launch. With Mod Nook installed you
+never need to open it — every setting appears under Pause > Mod Nook and applies immediately,
+without a restart.
 
 To uninstall, delete the BepInEx/plugins/ChestLabels folder. Your save is untouched, because
 nothing was ever written to it.
@@ -92,13 +110,21 @@ nothing was ever written to it.
 
 **Required**
 
-- BepInEx 5 (win_x64)
+- BepInEx 5 (win_x64), version 5.4.23.5 or newer
 
-**Optional**
+**Recommended companion**
 
-- Mod Menu — adds a Mods page to the pause menu so you can change this mod's settings in
-  game. Not needed; without it the settings live in a plain config file, and the defaults are
-  meant to be left alone.
+- **Mod Nook** — my in-game settings menu. Every setting in this mod appears under
+  **Pause > Mod Nook**, with sliders, a colour picker for the nameplate tint, and key
+  binding by pressing the key rather than spelling it out. Nothing here needs it; without
+  it the settings live in a plain config file, and the defaults are meant to be left alone.
+  https://www.nexusmods.com/moonlightpeaks/mods/127
+- **Mod Menu** by Elsiabeth does the same job and is also supported. Mod Nook and Mod Menu
+  can both be installed — each adds its own button and neither interferes with the other.
+
+PC/Steam only. The Switch and mobile builds cannot load BepInEx.
+
+**Compatibility**
 
 Works alongside other BepInEx mods. Tested with Extra Tooltip, Detailed Minimap, Far Sight,
 Save Anywhere and FasterGrowth.
@@ -111,8 +137,9 @@ Save Anywhere and FasterGrowth.
 - The **BepInEx** and **HarmonyX** teams, without whom none of this scene exists.
 - Whoever wrote the modding guides on the official wiki — they turn a cold start into an
   afternoon.
-- **Elsiabeth** for Mod Menu, which is why this mod's settings are configurable in game
-  without it having to build a settings screen of its own.
+- **Elsiabeth** for Mod Menu, which made the case that in-game settings were worth having,
+  and which is why this mod never had to build a settings screen of its own.
+- **My Mate**, for being my inspiration.
 
 ---
 
@@ -121,6 +148,19 @@ Save Anywhere and FasterGrowth.
 Player-facing. The repo `CHANGELOG.md` is written for us and names Harmony patches and
 compare masks; that belongs in the repo, not on a mod page. Describe the **symptom** a player
 would have noticed, not the cause, and leave out anything tried and reverted.
+
+### 1.0.0
+
+```
+New
+- Screen readers now speak a chest's name. If you use a screen reader such as
+  MoonlightAccess, facing a chest used to announce only its type ("Storage
+  Crate") - it now says the name you gave it.
+
+New settings
+- ScreenReaderName - how a named chest reads out to a screen reader: its type
+  and label ("Storage Crate named Pantry"), the label only ("Pantry"), or off.
+```
 
 ### 0.7.1
 
