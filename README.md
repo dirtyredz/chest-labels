@@ -2,7 +2,7 @@
 
 Name your chests, and see the name without opening them.
 
-**Status:** 🚀 **Published** — v0.6.0 live on Nexus as
+**Status:** 🚀 **Published** — v1.0.1 live on Nexus as
 [mod 119](https://www.nexusmods.com/moonlightpeaks/mods/119), released 2026-08-03.
 
 Source: <https://github.com/dirtyredz/chest-labels> (public, not linked from the Nexus page).

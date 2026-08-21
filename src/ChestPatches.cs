@@ -34,6 +34,41 @@ namespace ChestLabels
         /// </summary>
         private const string HeaderBandPath = "SlotContainer/Header";
 
+        // --- foreign-patch guard ------------------------------------------------------------
+        // Another mod (e.g. an outdated ExtraTooltip) can Harmony-patch NameplateScreen.Show and
+        // throw from its own postfix when a game update renames a type it referenced. The game's
+        // original Show has already drawn the nameplate by the time postfixes run, so a finalizer
+        // can swallow that foreign failure and our label still shows - no need to fall back to a
+        // self-drawn plate. Only the stale-reference exception kinds are suppressed, once logged.
+        private static bool warnedForeignNameplate;
+
+        [HarmonyPatch(typeof(NameplateScreen), "Show", new[] { typeof(RectTransform), typeof(INameplateData) })]
+        [HarmonyFinalizer]
+        private static void NameplateScreen_Show_Finalizer(ref Exception __exception)
+        {
+            if (__exception == null)
+            {
+                return;
+            }
+
+            if (__exception is TypeLoadException
+                || __exception is TypeInitializationException
+                || __exception is MissingMemberException)
+            {
+                if (!warnedForeignNameplate)
+                {
+                    warnedForeignNameplate = true;
+                    ChestLabelsPlugin.Log.LogWarning(
+                        "Another mod's NameplateScreen.Show patch threw (" + __exception.GetType().Name +
+                        "); suppressing it so the game nameplate still works. This is usually an " +
+                        "outdated tooltip mod after a game update.");
+                }
+
+                // Base nameplate already rendered before postfixes ran - safe to drop this.
+                __exception = null;
+            }
+        }
+
         /// <summary>
         /// Chest opened. PlayerStorageChestState.OnActivate assigns its private `chest`
         /// field before we run, so a Postfix sees it populated.

@@ -31,7 +31,7 @@ namespace ChestLabels
     {
         public const string PluginGuid = "com.dirtyredz.moonlightpeaks.chestlabels";
         public const string PluginName = "Chest Labels";
-        public const string PluginVersion = "1.0.0";
+        public const string PluginVersion = "1.0.1";
 
         internal static ManualLogSource Log;
         internal static LabelStore Store;

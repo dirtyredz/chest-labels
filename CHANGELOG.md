@@ -6,6 +6,18 @@ during development are not releases and do not get an entry. See RELEASING.md.
 Plain ASCII punctuation throughout - em-dashes did not survive a PowerShell round-trip and
 came back double-encoded.
 
+## 1.0.1 - 2026-08-20
+
+**Fix: the hover label could stop working after the Moonlight Peaks 1.2.3 update.** 1.2.3
+renamed the game's nameplate data types. Chest Labels itself was unaffected, but if another
+installed mod patched the game's nameplate and had not yet updated for 1.2.3 (for example an
+older ExtraTooltip), that mod's error would take the shared nameplate down with it and the
+chest label would disable itself for the session.
+
+Chest Labels now guards that shared nameplate call: if another mod's patch throws, the error
+is caught so the game's own nameplate - and your label - still show. Nothing to change in
+your labels or settings.
+
 ## 1.0.0 - 2026-08-10
 
 **Screen reader support.** Named chests are now spoken by screen readers such as
