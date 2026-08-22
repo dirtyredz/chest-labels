@@ -18,20 +18,30 @@ This file covers only what's specific to this mod.
 
 ## Layout
 
+See [STRUCTURE.md](STRUCTURE.md) for the full component map. In brief:
+
 ```
 mods/ChestLabels/
 ├── README.md               <- this file: design, decisions, plan
+├── STRUCTURE.md            <- code-shape map + structural debt
 ├── TESTING.md              <- what to try in-game, and what's uncertain
+├── Directory.Build.props   <- shared build config (workspace-synced canonical)
+├── pack.ps1                <- build + zip into Nexus layout (workspace-synced canonical)
+├── docs/                   <- living docs: ARCHITECTURE, DECISIONS, FEATURES, GOTCHAS, BACKLOG
 ├── research/
 │   ├── 01-chest-system.md  <- decompilation findings
 │   └── 02-save-format.md   <- save file structure, measured on a real save
-└── src/
-    ├── Directory.Build.props
-    ├── ChestLabels/        <- the plugin (netstandard2.1)
-    │   ├── Plugin.cs       <- BepInEx entry point, config, F9 reload
-    │   ├── LabelStore.cs   <- sidecar persistence (no Unity/BepInEx types)
-    │   └── ChestPatches.cs <- Harmony patches + UI header
-    └── ChestLabels.Tests/  <- console test runner (net8.0), no framework needed
+├── src/                    <- plugin sources, flat (netstandard2.1); no src/<ModName>/ nesting
+│   ├── Plugin.cs           <- BepInEx entry point, config, F9 reload
+│   ├── ChestPatches.cs     <- Harmony patches + in-panel header UI
+│   ├── HoverLabel.cs       <- world-space hover label
+│   ├── TitleEditor.cs      <- in-place rename (pencil + text field)
+│   ├── LabelStore.cs       <- sidecar persistence (no Unity/BepInEx types)
+│   ├── ChestIdentity.cs    <- Chest -> normalized label key
+│   ├── GameFonts.cs · GamePalette.cs   <- native typeface + colours
+│   ├── PanelSprite.cs · PencilIcon.cs  <- procedural sprites
+│   └── HoverFeedback.cs    <- edit-button hover/press feedback
+└── tests/                  <- console test runner (net8.0), no framework needed
 ```
 
 ---

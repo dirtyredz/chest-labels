@@ -657,17 +657,7 @@ namespace ChestLabels
             ChestLabelsPlugin.Log.LogInfo("Hover label canvas created.");
         }
 
-        private static string GetGuid(Chest chest)
-        {
-            var persistence = chest?.GridObjectPersistence;
-            if (persistence == null)
-            {
-                return null;
-            }
-
-            var guid = persistence.Guid.ToString();
-            return string.IsNullOrWhiteSpace(guid) ? null : guid.Trim().ToLowerInvariant();
-        }
+        private static string GetGuid(Chest chest) => ChestIdentity.GuidOf(chest);
     }
 }
 

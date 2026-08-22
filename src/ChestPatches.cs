@@ -814,35 +814,6 @@ namespace ChestLabels
         }
 
         /// <summary>
-        /// Pick a visible text element to borrow the font from. Prefers an active one, since
-        /// inactive elements are more likely to be leftovers with odd settings.
-        /// </summary>
-        private static TextMeshProUGUI FindFontDonor(ChestScreen screen, TextMeshProUGUI exclude) =>
-            FindFontDonorIn(screen.transform, exclude);
-
-        private static TextMeshProUGUI FindFontDonorIn(Transform root, TextMeshProUGUI exclude)
-        {
-            TextMeshProUGUI fallback = null;
-
-            foreach (var candidate in root.GetComponentsInChildren<TextMeshProUGUI>(true))
-            {
-                if (candidate == null || candidate == exclude || candidate.font == null)
-                {
-                    continue;
-                }
-
-                if (candidate.gameObject.activeInHierarchy)
-                {
-                    return candidate;
-                }
-
-                fallback = fallback ?? candidate;
-            }
-
-            return fallback;
-        }
-
-        /// <summary>
         /// One-shot dump of everything that decides whether the header is visible. Costs a
         /// little log noise and saves a lot of guessing; turn off once positioning is right.
         /// </summary>
@@ -971,17 +942,7 @@ namespace ChestLabels
             ChestLabelsPlugin.Log.LogInfo($"    contents: {used} slot(s) in use");
         }
 
-        private static string GetChestGuid(Chest chest)
-        {
-            var persistence = chest?.GridObjectPersistence;
-            if (persistence == null)
-            {
-                return null;
-            }
-
-            var guid = persistence.Guid.ToString();
-            return string.IsNullOrWhiteSpace(guid) ? null : guid.Trim().ToLowerInvariant();
-        }
+        private static string GetChestGuid(Chest chest) => ChestIdentity.GuidOf(chest);
     }
 }
 
