@@ -57,12 +57,6 @@ namespace ChestLabels
         internal static ConfigEntry<float> HoverFontSize;
         internal static ConfigEntry<float> HoverBackgroundAlpha;
 
-        /// <summary>
-        /// Set when UI injection throws. The header is then left alone for the rest of the
-        /// session rather than throwing once per chest open.
-        /// </summary>
-        internal static bool HeaderDisabledAfterError;
-
         private readonly Harmony harmony = new Harmony(PluginGuid);
 
         // Mod Menu reads these strings out of ConfigDescription.Tags and uses them to title its
