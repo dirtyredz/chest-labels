@@ -86,7 +86,7 @@ namespace ChestLabels
         /// Recursive hierarchy dump: name, size, anchored position, and any layout or mask
         /// components, which are the things that would reposition or clip an inserted title.
         /// </summary>
-        public static void DumpTree(Transform node, string indent, int depth = 0)
+        private static void DumpTree(Transform node, string indent, int depth = 0)
         {
             if (depth > 3)
             {

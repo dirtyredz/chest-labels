@@ -9,8 +9,15 @@ namespace ChestLabels
     /// from the captured originals rather than accumulated across repeated chest opens.
     ///
     /// Replaces the five parallel <c>Dictionary&lt;int,Vector2&gt;</c> caches that used to sit
-    /// in ChestPatches (one per geometry value). One instance per panel, keyed by the panel
-    /// RectTransform's InstanceID; each home is captured on first touch and reused thereafter.
+    /// in ChestPatches (one per geometry value) with a single per-panel state object, keyed by
+    /// the panel RectTransform's InstanceID. Each home is captured on first touch and reused
+    /// thereafter.
+    ///
+    /// This assumes a panel's child transforms (Header / Ornament / Line / Layout) are stable
+    /// across chest opens - true here, because the game reuses one chest panel instance and
+    /// only shows/hides it. If a game update ever rebuilt those children under a surviving
+    /// panel, a new child would inherit the old child's captured home; that trade is accepted
+    /// in exchange for one state object instead of five identity-keyed caches.
     ///
     /// Panel shape (from the runtime hierarchy dump in research/01-chest-system.md):
     ///   ChestContainer                        &lt;- the panel
@@ -25,16 +32,11 @@ namespace ChestLabels
         private static readonly Dictionary<int, ChestPanelGeometry> byPanel =
             new Dictionary<int, ChestPanelGeometry>();
 
-        private bool panelCaptured;
-        private Vector2 panelHome;
-        private bool layoutCaptured;
-        private Vector2 layoutHome;
-        private bool bandCaptured;
-        private Vector2 bandHome;
-        private bool ornamentCaptured;
-        private Vector2 ornamentHome;
-        private bool lineCaptured;
-        private Vector2 lineHome;
+        private Vector2? panelHome;
+        private Vector2? layoutHome;
+        private Vector2? bandHome;
+        private Vector2? ornamentHome;
+        private Vector2? lineHome;
 
         private static ChestPanelGeometry GetOrCreate(RectTransform panel)
         {
@@ -48,19 +50,27 @@ namespace ChestLabels
             return state;
         }
 
+        /// <summary>The panel is the band's grandparent: Header -&gt; SlotContainer -&gt; ChestContainer.</summary>
+        private static RectTransform ResolvePanel(Transform band)
+        {
+            var slotContainer = band.parent;
+            return slotContainer != null ? slotContainer.parent as RectTransform : null;
+        }
+
         /// <summary>
         /// Make room for the header on this panel: grow the panel, deepen the item grid's top
         /// inset by the same amount (so the grid keeps its height), drop the band, raise the
         /// ornament, and push the divider line down.
         ///
-        /// Each step is captured-once and independently guarded, so a panel whose shape has
-        /// partly drifted still gets whatever it can. All offsets are read from config every
-        /// time, so they can be tuned in the .cfg and take effect on the next chest open.
+        /// The padding step and the two nudges are guarded independently and best-effort, so a
+        /// panel whose shape has partly drifted (e.g. a game update renames Layout) still gets
+        /// whatever it can - the ornament and line are nudged even when the padding step can't
+        /// run. All offsets are read from config every time, so they can be tuned in the .cfg
+        /// and take effect on the next chest open.
         /// </summary>
         public static void Apply(Transform band)
         {
-            var slotContainer = band.parent;
-            var panel = slotContainer != null ? slotContainer.parent as RectTransform : null;
+            var panel = ResolvePanel(band);
             if (panel == null)
             {
                 // band is resolved from the panel, so this never happens; guard anyway.
@@ -68,46 +78,31 @@ namespace ChestLabels
             }
 
             var state = GetOrCreate(panel);
-            var layout = slotContainer.Find("Layout") as RectTransform;
+            var layout = band.parent.Find("Layout") as RectTransform;
 
             // --- top padding: grow panel + deepen layout inset + drop band ---
             if (layout != null)
             {
                 var padding = ChestLabelsPlugin.PanelTopPadding.Value;
 
-                if (!state.panelCaptured)
-                {
-                    state.panelHome = panel.sizeDelta;
-                    state.panelCaptured = true;
-                }
-
-                if (!state.layoutCaptured)
-                {
-                    state.layoutHome = layout.offsetMax;
-                    state.layoutCaptured = true;
-                }
-
                 // sizeDelta is height-minus-anchor-span, so adding N adds N of real height
                 // whether the panel is anchored stretched or fixed.
-                panel.sizeDelta = new Vector2(state.panelHome.x, state.panelHome.y + padding);
+                var panelBase = state.Capture(ref state.panelHome, panel.sizeDelta);
+                panel.sizeDelta = new Vector2(panelBase.x, panelBase.y + padding);
 
                 // offsetMax.y is measured downward from the top edge, so subtracting pushes the
                 // grid's top edge down by the same amount - the grid keeps its original height.
-                layout.offsetMax = new Vector2(state.layoutHome.x, state.layoutHome.y - padding);
+                var layoutBase = state.Capture(ref state.layoutHome, layout.offsetMax);
+                layout.offsetMax = new Vector2(layoutBase.x, layoutBase.y - padding);
 
                 // Growing the panel alone is not enough. Header is anchored to the top edge, so
                 // a centred growth carries it upward with the panel and the raised ornament ends
                 // up tighter to the top. Dropping the band is what creates room above it.
                 if (band is RectTransform bandRect)
                 {
-                    if (!state.bandCaptured)
-                    {
-                        state.bandHome = bandRect.anchoredPosition;
-                        state.bandCaptured = true;
-                    }
-
+                    var bandBase = state.Capture(ref state.bandHome, bandRect.anchoredPosition);
                     bandRect.anchoredPosition =
-                        new Vector2(state.bandHome.x, state.bandHome.y - ChestLabelsPlugin.HeaderDropY.Value);
+                        new Vector2(bandBase.x, bandBase.y - ChestLabelsPlugin.HeaderDropY.Value);
                 }
             }
 
@@ -133,13 +128,12 @@ namespace ChestLabels
 
             ornament.gameObject.SetActive(true);
 
-            var slotContainer = band.parent;
-            var panel = slotContainer != null ? slotContainer.parent as RectTransform : null;
+            var panel = ResolvePanel(band);
             if (panel != null
                 && byPanel.TryGetValue(panel.GetInstanceID(), out var state)
-                && state.ornamentCaptured)
+                && state.ornamentHome.HasValue)
             {
-                ornament.anchoredPosition = state.ornamentHome;
+                ornament.anchoredPosition = state.ornamentHome.Value;
             }
         }
 
@@ -154,13 +148,8 @@ namespace ChestLabels
             // divider line rather than replacing the game's decoration.
             ornament.gameObject.SetActive(true);
 
-            if (!ornamentCaptured)
-            {
-                ornamentHome = ornament.anchoredPosition;
-                ornamentCaptured = true;
-            }
-
-            ornament.anchoredPosition = ornamentHome + new Vector2(0f, ChestLabelsPlugin.OrnamentOffsetY.Value);
+            var home = Capture(ref ornamentHome, ornament.anchoredPosition);
+            ornament.anchoredPosition = home + new Vector2(0f, ChestLabelsPlugin.OrnamentOffsetY.Value);
         }
 
         private void NudgeLine(RectTransform line)
@@ -172,13 +161,19 @@ namespace ChestLabels
 
             // The divider is anchored to the bottom of the band, so pushing it down opens up the
             // space beneath the title. Raising the flourish alone only helps above it.
-            if (!lineCaptured)
+            var home = Capture(ref lineHome, line.anchoredPosition);
+            line.anchoredPosition = home + new Vector2(0f, ChestLabelsPlugin.LineOffsetY.Value);
+        }
+
+        /// <summary>Capture <paramref name="current"/> the first time only; return the captured home.</summary>
+        private Vector2 Capture(ref Vector2? home, Vector2 current)
+        {
+            if (home == null)
             {
-                lineHome = line.anchoredPosition;
-                lineCaptured = true;
+                home = current;
             }
 
-            line.anchoredPosition = lineHome + new Vector2(0f, ChestLabelsPlugin.LineOffsetY.Value);
+            return home.Value;
         }
     }
 }
