@@ -3,11 +3,9 @@
 Prioritized trough of deferred work / known issues. P0 = do next, P1 = should, P2 = nice.
 
 ## P1
-- [ ] **Split `HoverLabel.cs` (~670 lines) by responsibility.** It mixes chest detection
-  (interaction-source reflection + raycast fallback), camera resolution, own-canvas rendering, game-
-  nameplate integration, and shared-nameplate tint/restore. Candidate seams: a detection/source
-  type, an own-plate view, a game-nameplate view. Same pattern as the 2026-08-22 `ChestPatches`
-  split. Note: this UI/detection code has no automated coverage — verify in-game after.
+- [x] ~~**Split `HoverLabel.cs` by responsibility.**~~ Done 2026-08-22 → `HoverLabel` (orchestrator)
+  + `ChestInteractionSource` (detection) + `HoverLabelPlateView` (mod plate) + `GameNameplateView`
+  (game nameplate). 672 → 287 lines; all four under the cap.
 
 ## P2
 - [ ] **Automated coverage beyond `LabelStore`.** Only `LabelStore` is unit-tested (`tests/Program.cs`,

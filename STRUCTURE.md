@@ -26,7 +26,10 @@ ChestPatches (hooks) ─▶ ChestHeaderPresenter (chest-window title view)
                              ├─▶ ChestPanelGeometry (panel spacing state)
                              ├─▶ UiDiagnostics (layout dumps)
                              └─▶ TitleEditor (pencil rename)
-HoverLabel (world label) ─▶ PanelSprite, GameFonts, GamePalette
+HoverLabel (world label, orchestrator)
+  ├─▶ ChestInteractionSource (which chest is pointed at)
+  ├─▶ HoverLabelPlateView (mod's own plate)  ─▶ PanelSprite, GameFonts, GamePalette
+  └─▶ GameNameplateView (game nameplate + tint)
 TitleEditor ─▶ PencilIcon, HoverFeedback, GameFonts, GamePalette
 everything data ─▶ LabelStore (Unity-free, unit-tested)
 ```
@@ -45,7 +48,10 @@ run one way (hooks → presenter → geometry/diagnostics; views → sprite/font
 | Chest-window title | Draw the title into the panel header (or overlay fallback) | [src/ChestHeaderPresenter.cs](src/ChestHeaderPresenter.cs) | `ApplyHeader`, `HeaderDisabledAfterError` | ChestPanelGeometry, UiDiagnostics, TitleEditor, GameFonts, GamePalette | change how the title looks/places |
 | Panel geometry | Per-panel spacing state (capture-once, restore) | [src/ChestPanelGeometry.cs](src/ChestPanelGeometry.cs) | `Apply`, `RestoreOrnament` | ChestLabelsPlugin config | tune header spacing |
 | UI diagnostics | Read-only layout/geometry log dumps | [src/UiDiagnostics.cs](src/UiDiagnostics.cs) | `DumpPanelGeometry`, `DumpHeaderDiagnostics` | ChestLabelsPlugin.Log | add a diagnostic |
-| World hover label | Detect hovered chest, render label via game nameplate or own plate | [src/HoverLabel.cs](src/HoverLabel.cs) | `HoverLabel` (MonoBehaviour), `ShowingLabel`, `ShouldSuppressArrow` | PanelSprite, GameFonts, GamePalette, LabelStore | change hover detection/rendering |
+| World hover (orchestrator) | Poll loop, camera, canvas/anchor; wires the three below | [src/HoverLabel.cs](src/HoverLabel.cs) | `HoverLabel` (MonoBehaviour), `ShouldSuppressArrow` | ChestInteractionSource, HoverLabelPlateView, GameNameplateView | change the hover loop |
+| Hover detection | Which chest is pointed at (interaction target ∥ raycast) | [src/ChestInteractionSource.cs](src/ChestInteractionSource.cs) | `FindChest`, `ShouldSuppressArrow`, `ShouldStandDown`, `GetGuid`, `UsingInteractionSource` | LabelStore | change detection |
+| Hover plate view | The mod's own rounded plate + text | [src/HoverLabelPlateView.cs](src/HoverLabelPlateView.cs) | `Ensure`, `Show`, `Hide`, `Reposition` | PanelSprite, GameFonts, GamePalette | change the mod plate |
+| Game nameplate view | Show via the game's nameplate; tint + restore | [src/GameNameplateView.cs](src/GameNameplateView.cs) | `Show`, `Hide`, `IsAvailable` | (game NameplateScreen) | change nameplate use |
 | In-place rename | Pencil button + input field in the chest header | [src/TitleEditor.cs](src/TitleEditor.cs) | `Attach`, `IsEditing`, `Commit`, `Cancel` | PencilIcon, HoverFeedback, GameFonts, GamePalette, LabelStore | change the rename UX |
 | Label store | Save-scoped JSON sidecar persistence (Unity-free) | [src/LabelStore.cs](src/LabelStore.cs) | `LabelStore` (`Get`/`Set`/`Remove`/`Save`/`LoadForSave`…) | Newtonsoft.Json only | change persistence/format |
 | Fonts | Locate the game's Gelica font + outline material | [src/GameFonts.cs](src/GameFonts.cs) | `Apply`, `Font`, `HeavyFont`, `OutlineMaterial` | TMP | — |
@@ -88,13 +94,13 @@ workspace build (see [docs/DECISIONS.md](docs/DECISIONS.md)); it is not a source
 
 ## Structural debt
 
-- **P1 — `HoverLabel.cs` (~670 lines) is a God-file.** It mixes chest detection (interaction-source
-  reflection + raycast), camera resolution, own-canvas rendering, game-nameplate integration, and
-  shared-nameplate tinting/restore. Split candidates: an interaction/detection source, an own-plate
-  view, and a game-nameplate view. (A prior exploratory split existed on a since-deleted branch; not
-  merged.) See [docs/BACKLOG.md](docs/BACKLOG.md).
 - **P2 — no automated coverage outside `LabelStore`.** All UI-geometry/detection code is verified
   only by in-game smoke test. See [docs/GOTCHAS.md](docs/GOTCHAS.md).
+- **Nit — duplicated chest→GUID helper.** `ChestPatches.GetChestGuid` and
+  `ChestInteractionSource.GetGuid` are identical 6-line helpers (trim + lowercase). Small and
+  independent; centralize only if a third caller appears.
+- _(Resolved 2026-08-22)_ The `ChestPatches` and `HoverLabel` God-files were both split by
+  responsibility — no source file now exceeds the 800-line cap.
 - **Nit — stale doc reference.** `GamePalette.cs` cites `10-visual-integration.md` "at the repo
   root"; no such file is in this repo (it's a workspace-level guide).
 

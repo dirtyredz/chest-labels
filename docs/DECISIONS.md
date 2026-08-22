@@ -3,6 +3,16 @@
 Design decisions worth not re-litigating. Newest first. Rationale drawn from git history,
 `CHANGELOG.md`, and code comments; where unknown it says so.
 
+## 2026-08-22 — Split `HoverLabel` God-file into orchestrator + source + two views
+Moved detection to `ChestInteractionSource`, the mod's own plate to `HoverLabelPlateView`, and the
+game-nameplate + tint path to `GameNameplateView`; `HoverLabel` is now a thin MonoBehaviour
+orchestrator (672 → 287 lines).
+**Why:** the file mixed detection, camera, own-canvas rendering, and game-nameplate integration —
+over the God-class cap and hard to change one concern without touching the others. **Rejected:**
+folding camera resolution into the source (kept in the orchestrator, which owns the canvas and passes
+the camera down). Removed the dead `ShowingLabel` flag (write-only; superseded by
+`ShouldSuppressArrow` in 0.7.0).
+
 ## 2026-08-22 — Split `ChestPatches` God-file into presenter + geometry + diagnostics
 Moved chest-window title drawing to `ChestHeaderPresenter`, the five per-panel `Dictionary<int,
 Vector2>` spacing caches into one per-panel `ChestPanelGeometry` state object, and the layout dumps
