@@ -8,6 +8,7 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
+
   <!-- Single source of truth for the plugin version: generate a compile-time constant
        from the csproj <Version> so [BepInPlugin] never drifts from a hardcoded string. -->
   <Target Name="GenerateModBuildInfo" BeforeTargets="CoreCompile">
@@ -19,5 +20,4 @@
       <Compile Include="$(IntermediateOutputPath)ModBuildInfo.g.cs" />
     </ItemGroup>
   </Target>
-
 </Project>
