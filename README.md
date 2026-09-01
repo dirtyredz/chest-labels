@@ -20,19 +20,36 @@ This file covers only what's specific to this mod.
 
 ```
 mods/ChestLabels/
-├── README.md               <- this file: design, decisions, plan
-├── TESTING.md              <- what to try in-game, and what's uncertain
+├── README.md                   <- this file: design, decisions, plan
+├── STRUCTURE.md                <- the code map + the enforced ## Layout contract
+├── TESTING.md                  <- what to try in-game, and what's uncertain
+├── Directory.Build.props       <- workspace-synced build settings
+├── pack.ps1                    <- workspace-synced packer
 ├── research/
-│   ├── 01-chest-system.md  <- decompilation findings
-│   └── 02-save-format.md   <- save file structure, measured on a real save
-└── src/
-    ├── Directory.Build.props
-    ├── ChestLabels/        <- the plugin (netstandard2.1)
-    │   ├── Plugin.cs       <- BepInEx entry point, config, F9 reload
-    │   ├── LabelStore.cs   <- sidecar persistence (no Unity/BepInEx types)
-    │   └── ChestPatches.cs <- Harmony patches + UI header
-    └── ChestLabels.Tests/  <- console test runner (net8.0), no framework needed
+│   ├── 01-chest-system.md      <- decompilation findings
+│   └── 02-save-format.md       <- save file structure, measured on a real save
+├── tests/                      <- console test runner (net8.0), no framework needed
+└── src/                        <- the plugin (netstandard2.1)
+    ├── ChestLabels.csproj
+    ├── Plugin.cs               <- BepInEx entry point, config, F9 reload
+    ├── game/                   <- reads or intercepts the live game
+    │   ├── ChestPatches.cs         Harmony patches
+    │   ├── ChestInteractionSource.cs
+    │   ├── GameNameplateView.cs
+    │   ├── GameFonts.cs
+    │   └── GamePalette.cs
+    ├── ui/                     <- what we draw: presenters, views, sprites
+    │   ├── ChestHeaderPresenter.cs · HoverLabel.cs · HoverLabelPlateView.cs
+    │   ├── TitleEditor.cs · HoverFeedback.cs · ChestPanelGeometry.cs
+    │   └── PanelSprite.cs · PencilIcon.cs
+    └── core/                   <- the mod's own logic, no game types
+        ├── LabelStore.cs           sidecar persistence (no Unity/BepInEx types)
+        └── UiDiagnostics.cs        (see BACKLOG — reads UI internals, wants ui/)
 ```
+
+Folders are file organisation only: everything stays in the single flat `ChestLabels` namespace, and
+the SDK-style project globs `**/*.cs`, so moving a file needs no `.csproj` edit. See
+[STRUCTURE.md](STRUCTURE.md#layout) for the enforced contract.
 
 ---
 

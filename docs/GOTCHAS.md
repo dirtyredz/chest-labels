@@ -48,7 +48,8 @@ Non-obvious traps. Each: **trap → why → do instead.**
   `Plugin.cs`; hardcoding a version there would double-source it. → Bump csproj only, and only when
   publishing.
 
-- **Plugin `.cs` files are flat in `src/`** (no `src/ChestLabels/`), docs + `pack.ps1` at mod root —
-  workspace convention.
+- **Plugin `.cs` files are grouped by responsibility under `src/`** — `src/Plugin.cs` beside the
+  `.csproj`, then `src/game/`, `src/ui/`, `src/core/`; never `src/ChestLabels/`. Docs + `pack.ps1`
+  at mod root. Workspace convention; see STRUCTURE.md `## Layout` for the enforced contract.
 
 _Living doc — refresh with /project-docs when it drifts._
