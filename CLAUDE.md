@@ -22,7 +22,11 @@ Only `LabelStore` is unit-tested. **All UI / hover / geometry code must be smoke
 
 ## Conventions (mod-specific)
 
-- Plugin `.cs` flat in `src/`; docs + `pack.ps1` at mod root.
+- Plugin `.cs` under `src/`, foldered by responsibility — `src/game/` (Harmony patches + live-game
+  bridges), `src/ui/` (panels, widgets, sprites), `src/core/` (domain logic, state, diagnostics).
+  Only `Plugin.cs` sits at the `src/` root. Docs + `pack.ps1` at mod root.
+  See [STRUCTURE.md](STRUCTURE.md) `## Layout` for the enforced homes.
+- One flat `namespace ChestLabels` in every file, whatever the folder — do not add folder namespaces.
 - Version in csproj `<Version>` only, only when publishing; never hardcode in `Plugin.cs`.
 - Commit identity `dirtyredz <dirtyredz@live.com>`.
 - **Do NOT edit `pack.ps1` or `Directory.Build.props`** — workspace-synced canonicals.

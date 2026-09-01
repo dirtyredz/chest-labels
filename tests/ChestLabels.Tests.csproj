@@ -14,7 +14,7 @@
       The plugin assembly drags in Unity/BepInEx types that cannot load outside the game;
       LabelStore is deliberately free of them so it can be tested on its own.
     -->
-    <Compile Include="..\src\LabelStore.cs" Link="LabelStore.cs" />
+    <Compile Include="..\src\core\LabelStore.cs" Link="LabelStore.cs" />
   </ItemGroup>
 
   <ItemGroup>
