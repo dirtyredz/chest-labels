@@ -52,4 +52,6 @@ Non-obvious traps. Each: **trap → why → do instead.**
   `.csproj`, then `src/game/`, `src/ui/`, `src/core/`; never `src/ChestLabels/`. Docs + `pack.ps1`
   at mod root. Workspace convention; see STRUCTURE.md `## Layout` for the enforced contract.
 
+- **Chest-window geometry depends on game panel names.** The chest-window geometry depends on the panel path `ChestContainer/SlotContainer/Header` and child names `Ornament`/`Line`/`Layout`. A game update renaming these degrades gracefully (overlay fallback / skipped nudges) but loses the native look — retest UI after each game update.
+
 _Living doc — refresh with /project-docs when it drifts._
